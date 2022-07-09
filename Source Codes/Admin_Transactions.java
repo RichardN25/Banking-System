@@ -1,4 +1,4 @@
-package bankingsystem;
+package bankingsystem2;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -6,11 +6,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,23 +18,27 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
-public class Admin_Transactions implements ActionListener{
+public class Admin_Transactions extends Variables implements ActionListener{
     private JFrame frame;
     JPanel northPanel, northWestPanel, northEastPanel, centerPanel, centerEastPanel,
-             centerWestPanel, tablePanel, buttonsPanel, gridPanel, userLabelPanel;
+    centerWestPanel, tablePanel, buttonsPanel, gridPanel, userLabelPanel;
     JLabel userLabel;
-    JLabel arr[] = new Labels[77];
-    JButton next, prev, back;
-    Icon backIcon;
+    JLabel arr[] = new Labels[63];
+    JButton nextBtn, prevBtn, backBtn;
+    JButton options[] = new Buttons[18];
+    GridLayout grid;
     
-    ArrayList<String> users = new ArrayList<>();
-    int indexDisp = 0;
+    ArrayList<String> transactions = new ArrayList<>();
     
-    Color color1  = new Color(20, 30, 39);
-    Color color2  = new Color(228, 88, 38);
+    //counter Variables
+    private int dataIndex;
+    private int pageIndex = 1;
     
     Admin_Transactions() {
+        
+        //Initialization
         frame = new JFrame("Transactions");
+        grid = new GridLayout(7,11);
         northPanel = new JPanel();
         northWestPanel = new JPanel();
         northEastPanel = new JPanel();
@@ -48,138 +48,245 @@ public class Admin_Transactions implements ActionListener{
         tablePanel = new JPanel();
         buttonsPanel = new JPanel();
         gridPanel = new JPanel();
-        userLabel = new Labels("TRANSACTIONS",30);
+        userLabel = new Labels("Transactions",30);
         userLabelPanel = new JPanel();
-        next = new Buttons("Next");
-        prev = new Buttons("Previous");
-//        backIcon = new ImageIcon("imgs/back2.png");
-        back = new JButton("Back");
+        nextBtn = new Buttons("Next");
+        prevBtn = new Buttons("Previous");
+        backBtn = new Buttons("Back");
         
-        back.setBackground(Color.green);
-        back.setFocusable(false);
-//        back.setContentAreaFilled(false);
-//        back.setBorder(BorderFactory.createEmptyBorder(15,0,0,0));
-        back.setPreferredSize(new Dimension(75,70));
-        back.addActionListener(this);
-
-        next.setFocusable(false);
-        prev.setFocusable(false);
-        prev.setPreferredSize(new Dimension(335,45));
-        next.setPreferredSize(new Dimension(335,45));
-        next.addActionListener(this);
-        prev.addActionListener(this);
-        prev.setEnabled(false);
-                
-        gridPanel.setLayout(new GridLayout(7,10));
-        gridPanel.setBorder(new LineBorder(Color.WHITE));
-
-        tablePanel.setLayout(new BorderLayout());
-        tablePanel.setSize(700,500);
-        gridPanel.setBackground(new Color(0,0,0));
-        
-        buttonsPanel.setPreferredSize(new Dimension(700,50));
-        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(2,0,0,0));
-        
-        int count = 0;
-        
+        //RETRIEVE DATA FROM BANKING SYSTEM DATABASE
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/bankingsystem?zeroDateTimeBehavior=CONVERT_TO_NULL","root","");
-            Statement stm = con.createStatement();
-
-            String query = "SELECT ID, USERNAME, FIRSTNAME, MIDDLENAME, LASTNAME, ROLE, UPDATED_AT, CREATED_AT FROM USERS ORDER BY ID ASC";
-            ResultSet rs = stm.executeQuery(query);
+           
+            query = "SELECT * FROM TRANSACTION ORDER BY ID ASC";
+            rs = stm.executeQuery(query);
 
             while (rs.next()){
-                users.add(Integer.toString(rs.getInt("id")));
-                users.add(rs.getString("username"));
-                users.add(rs.getString("firstname"));
-                users.add(rs.getString("middlename"));
-                users.add(rs.getString("lastname"));
-                users.add(rs.getString("role"));
-                users.add(rs.getString("updated_at"));
-                users.add(rs.getString("created_at"));
+                transactions.add(Integer.toString(rs.getInt("id")));
+                transactions.add(Integer.toString(rs.getInt("id_user")));
+                transactions.add(rs.getString("sender"));
+                transactions.add(rs.getString("receiver"));
+                transactions.add(Float.toString(rs.getFloat("amount")));
+                transactions.add(Float.toString(rs.getFloat("running_balance")));
+                transactions.add(rs.getString("type"));
+                transactions.add(rs.getString("updated_at"));
+                transactions.add(rs.getString("created_at"));
             }
         }
-        catch (SQLException | ClassNotFoundException ex) {
+        catch (SQLException ex) {
             Logger.getLogger(Admin_Users.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        if(indexDisp < users.size()){
-            next.setEnabled(true);
+        //GREATER THAN 48 (FIRST 6 ENTRIES * PER DATA COLUMN)
+        if(transactions.size() > 48){
+            nextBtn.setEnabled(true);
         }
         else{
-            next.setEnabled(false);
+            nextBtn.setEnabled(false);
         }
         
-        for (int i = 0; i < arr.length; i++) {
-            arr[i] = new Labels();
-            arr[i].setBorder(BorderFactory.createEmptyBorder(0,10,0,0));
-            arr[i].setOpaque(true);
-            gridPanel.add(arr[i]);
-        }
         
-//        for(int i = 0; i < 77; i++){
-//            if(i % 11 == 0){
-//                if(i == 0){
-//                    arr[i].setText("ID");
-//                }
-//                else{
-//                    arr[i].setText(users.get(i-4));
-//                }
-//            }
-//        }
-        
-        buttonsPanel.setBackground(color1); //BUTTONS PANEL SOUTH
-        buttonsPanel.setPreferredSize(new Dimension(0,100));
-        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(20,0,20,0));
-        buttonsPanel.add(prev);
-        buttonsPanel.add(next);
-        
-        //Size customization
+        //PRELOAD TABLE && SET LABELS
+            for (int i = 0; i < arr.length; i++) {
+                arr[i] = new Labels();
+                arr[i].setBackground(Color.WHITE);
+                arr[i].setBorder(BorderFactory.createEmptyBorder(0,10,0,0));
+                arr[i].setOpaque(true);
+                gridPanel.add(arr[i]);
+            }
+            
+        //PRINT FIRST 6 ENTRIES FROM DATABASE
+            for(int i = 0; i < arr.length; i++){
+                if(i % 9 == 0){
+                        //arr[i].setWidthcolumn PAANO MAGSET WIDTH NG COLUMN
+                   if(i == 0){
+                        arr[i].setText("ID");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 1){
+                   if(i == 1){
+                        arr[i].setText("ID_USER");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 2){
+                   if(i == 2){
+                        arr[i].setText("SENDER");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 3){
+                   if(i == 3){
+                        arr[i].setText("RECEIVER");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 4){
+                   if(i == 4){
+                        arr[i].setText("AMOUNT");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 5){
+                   if(i == 5){
+                        arr[i].setText("RUNNING BAL");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 6){
+                   if(i == 6){
+                        arr[i].setText("TYPE");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 7){
+                   if(i == 7){
+                        arr[i].setText("UPDATED AT");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 8){
+                   if(i == 8){
+                        arr[i].setText("CREATED AT");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+                arr[i].setBorder(new LineBorder(Color.BLACK));
+            }
+            
+            
+        //Layout
+        grid.setHgap(2);
+        grid.setVgap(2);
+        gridPanel.setLayout(grid);
+        tablePanel.setLayout(new BorderLayout());
         northPanel.setLayout(new BorderLayout());
-        northPanel.setPreferredSize(new Dimension(1500,130));
-        
-        northWestPanel.setPreferredSize(new Dimension(100,75));
-        northWestPanel.setBorder(BorderFactory.createEmptyBorder(10,0,0,0));
-        
-        northEastPanel.setPreferredSize(new Dimension(1400,75)); //TOP PANEL
-        northEastPanel.setBorder(BorderFactory.createEmptyBorder(20,0,0,90));
-        
         centerPanel.setLayout(new BorderLayout());
-        centerPanel.setBackground(Color.WHITE);
         
+        //Size
+        tablePanel.setSize(700,500);
+        buttonsPanel.setPreferredSize(new Dimension(700,50));
+        buttonsPanel.setPreferredSize(new Dimension(0,100));
+        northPanel.setPreferredSize(new Dimension(1500,130));
+        northWestPanel.setPreferredSize(new Dimension(100,75));
+        northEastPanel.setPreferredSize(new Dimension(1400,75));
         centerWestPanel.setPreferredSize(new Dimension(100,0));
-        centerWestPanel.setBackground(color1); //LEFT PANEL
-        
-        centerEastPanel.setBackground(color1); // RIGHT PANEL
         centerEastPanel.setPreferredSize(new Dimension(100,0));
         
-        northWestPanel.setBackground(color1); // BACK BUTTON PANEL
-        northEastPanel.setBackground(color1); // TOP LABEL PANEL
+        //Color
+        gridPanel.setBackground(Color.BLACK);
+        buttonsPanel.setBackground(Color.WHITE);
+        centerPanel.setBackground(Color.WHITE);
+        centerWestPanel.setBackground(Color.WHITE);
+        centerEastPanel.setBackground(Color.WHITE);
+        northWestPanel.setBackground(Color.BLACK);
+        northEastPanel.setBackground(Color.BLACK);
+        userLabelPanel.setBackground(Color.BLACK);
+        userLabel.setForeground(Color.WHITE);
         
-        userLabelPanel.add(userLabel); //Title Panel
-        userLabelPanel.setBackground(color2);
-        userLabelPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
-        
+        //Border
+        gridPanel.setBorder(new LineBorder(Color.WHITE));
+        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(20,0,20,0));
+        northWestPanel.setBorder(BorderFactory.createEmptyBorder(20,0,0,0));
+        northEastPanel.setBorder(BorderFactory.createEmptyBorder(20,0,0,90));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(30,0,0,0));
+        userLabelPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
         userLabel.setBorder(BorderFactory.createEmptyBorder(10,50,10,50));
-        userLabel.setForeground(Color.white);
         
-        //Integration of the components into the frame
+        //Buttons
+        backBtn.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
+        nextBtn.setPreferredSize(new Dimension(335,45));
+        backBtn.setPreferredSize(new Dimension(75,70));
+        prevBtn.setPreferredSize(new Dimension(335,45));
+        nextBtn.addActionListener(this);
+        backBtn.addActionListener(this);
+        prevBtn.addActionListener(this);
+        nextBtn.setFocusable(false);
+        backBtn.setFocusable(false);
+        prevBtn.setFocusable(false);
+        prevBtn.setEnabled(false);
+        
+        //Integration
         centerPanel.add(centerWestPanel, BorderLayout.WEST);
         centerPanel.add(centerEastPanel, BorderLayout.EAST);
         centerPanel.add(tablePanel, BorderLayout.CENTER);
+        buttonsPanel.add(prevBtn);
+        buttonsPanel.add(nextBtn);
         tablePanel.add(buttonsPanel, BorderLayout.SOUTH);
         tablePanel.add(gridPanel, BorderLayout.CENTER);
+        userLabelPanel.add(userLabel);
         northEastPanel.add(userLabelPanel);
-        northWestPanel.add(back);
+        northWestPanel.add(backBtn);
         northPanel.add(northWestPanel, BorderLayout.WEST);
         northPanel.add(northEastPanel, BorderLayout.EAST);
         frame.add(northPanel, BorderLayout.NORTH);
         frame.add(centerPanel, BorderLayout.CENTER);
         
         //Frame attributes
-        frame.setSize(1500,700);
+        frame.setSize(1500,800);
         frame.setResizable(false);
         frame.setVisible(true);
         frame.setLocationRelativeTo(null);
@@ -187,7 +294,287 @@ public class Admin_Transactions implements ActionListener{
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public void actionPerformed(ActionEvent ae) {
+              
+        if(ae.getSource() == nextBtn){
+            //PREV NEXT LOGIC
+            pageIndex++;
+            prevBtn.setEnabled(true);
+            
+            if(pageIndex == 1 && transactions.size() > 48){
+                nextBtn.setEnabled(true);
+            }
+            else if(transactions.size() > 48 * (pageIndex)){
+                nextBtn.setEnabled(true);
+            }
+            else{
+                nextBtn.setEnabled(false);
+            }
+            
+            //BUTTONS LOGIC
+            
+            for(int i = 0; i < arr.length; i++){
+                if(i % 9 == 0){
+                        //arr[i].setWidthcolumn PAANO MAGSET WIDTH NG COLUMN
+                   if(i == 0){
+                        arr[i].setText("ID");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 1){
+                   if(i == 1){
+                        arr[i].setText("ID_USER");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 2){
+                   if(i == 2){
+                        arr[i].setText("SENDER");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 3){
+                   if(i == 3){
+                        arr[i].setText("RECEIVER");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 4){
+                   if(i == 4){
+                        arr[i].setText("AMOUNT");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 5){
+                   if(i == 5){
+                        arr[i].setText("RUNNING BALANCE");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 6){
+                   if(i == 6){
+                        arr[i].setText("TYPE");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 7){
+                   if(i == 7){
+                        arr[i].setText("UPDATED AT");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 8){
+                   if(i == 8){
+                        arr[i].setText("CREATED AT");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+                arr[i].setBorder(new LineBorder(Color.BLACK));
+            }
+        }
+        else if(ae.getSource() == prevBtn){
+            
+            //PREV NEXT LOGIC
+            dataIndex = dataIndex - (48 + (48 - ((48 * pageIndex) - dataIndex)));
+            
+            pageIndex--;
+            
+            if(pageIndex == 1){
+                nextBtn.setEnabled(true);
+                prevBtn.setEnabled(false);
+            }
+            else{
+                prevBtn.setEnabled(true);
+            }
+            
+            for(int i = 0; i < arr.length; i++){
+                if(i % 9 == 0){
+                        //arr[i].setWidthcolumn PAANO MAGSET WIDTH NG COLUMN
+                   if(i == 0){
+                        arr[i].setText("ID");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 1){
+                   if(i == 1){
+                        arr[i].setText("ID_USER");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 2){
+                   if(i == 2){
+                        arr[i].setText("SENDER");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 3){
+                   if(i == 3){
+                        arr[i].setText("RECEIVER");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 4){
+                   if(i == 4){
+                        arr[i].setText("AMOUNT");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 5){
+                   if(i == 5){
+                        arr[i].setText("RUNNING BALANCE");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 6){
+                   if(i == 6){
+                        arr[i].setText("TYPE");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 7){
+                   if(i == 7){
+                        arr[i].setText("UPDATED AT");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+               else if(i % 9 == 8){
+                   if(i == 8){
+                        arr[i].setText("CREATED AT");
+                   }
+                   else{
+                        try{
+                          arr[i].setText(transactions.get(dataIndex));
+                          dataIndex++;
+                       }catch(IndexOutOfBoundsException e){
+                           arr[i].setText("");
+                       }
+                   }
+                }
+                arr[i].setBorder(new LineBorder(Color.BLACK));
+            }
+        }
+        else if(ae.getSource() == backBtn){
+            frame.dispose();
+            new Admin_Dashboard();
+        }
     }
 }
